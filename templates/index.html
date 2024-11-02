@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador Léxico y Sintáctico de CURP</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e2f1f8; /* Un fondo suave */
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid #ccc; /* Borde para darle un toque rústico */
+        }
+        h1 {
+            text-align: center;
+            color: #5b4b8a; /* Color de título */
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        input {
+            width: calc(100% - 22px);
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #5b4b8a; /* Borde más grueso */
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            background: #5b4b8a;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #4b3c6b; /* Color de fondo al pasar el ratón */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #7343cc; /* Color de fondo de las cabeceras */
+            color: white;
+        }
+        #total {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center; /* Centrar el total */
+            font-size: 18px;
+            color: #5b4b8a; /* Color del total */
+        }
+        h3 {
+            text-align: center; /* Centrar el mensaje de validación */
+            color: #d9534f; /* Color rojo para mensajes de error */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analizador Léxico y Sintáctico de CURP</h1>
+        <div>
+            <input type="text" id="curpInput" placeholder="Ingresa tu CURP" required>
+            <button onclick="analyzeCURP()">Analizar</button>
+            <button onclick="clearFields()">Borrar</button>
+        </div>
+        <h3 id="validationMessage"></h3>
+        <table id="lexicalTable" style="display: none;">
+            <tr><th>Tipo de Token</th><th>Valor</th></tr>
+            <tr><td>Apellido Paterno</td><td id="apellidoPaterno"></td></tr>
+            <tr><td>Apellido Materno</td><td id="apellidoMaterno"></td></tr>
+            <tr><td>Nombre</td><td id="nombre"></td></tr>
+            <tr><td>Fecha de Nacimiento</td><td id="fechaNacimiento"></td></tr>
+            <tr><td>Género</td><td id="genero"></td></tr>
+            <tr><td>Estado</td><td id="estado"></td></tr>
+            <tr><td>Consonantes Internas</td><td id="consonantesInternas"></td></tr>
+            <tr><td>Homoclave</td><td id="homoclave"></td></tr>
+            <tr><td>Dígito Verificador</td><td id="digitoVerificador"></td></tr>
+        </table>
+        <div id="total"></div> <!-- Elemento para mostrar el total -->
+    </div>
+
+    <script>
+        function analyzeCURP() {
+            const curp = document.getElementById("curpInput").value;
+            fetch("/analyze", {
+                method: "POST",
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: `curp=${encodeURIComponent(curp)}` // Corregido
+            })
+            .then(response => response.json())
+            .then(data => {
+                const lexicalData = data.lexical_analysis;
+                const validationMessage = data.syntactic_validation;
+                document.getElementById("validationMessage").innerText = validationMessage;
+
+                if (lexicalData) {
+                    document.getElementById("lexicalTable").style.display = "table";
+                    document.getElementById("apellidoPaterno").innerText = lexicalData['Apellido Paterno'];
+                    document.getElementById("apellidoMaterno").innerText = lexicalData['Apellido Materno'];
+                    document.getElementById("nombre").innerText = lexicalData['Nombre'];
+                    document.getElementById("fechaNacimiento").innerText = lexicalData['Fecha de Nacimiento'];
+                    document.getElementById("genero").innerText = lexicalData['Género'];
+                    document.getElementById("estado").innerText = lexicalData['Estado'];
+                    document.getElementById("consonantesInternas").innerText = lexicalData['Consonantes Internas'];
+                    document.getElementById("homoclave").innerText = lexicalData['Homoclave'];
+                    document.getElementById("digitoVerificador").innerText = lexicalData['Dígito Verificador'];
+
+                    // Calcular total y mostrarlo
+                    const total = calculateTotal(lexicalData);
+                    document.getElementById("total").innerText = `Total de Tokens Léxicos: ${total}`; // Corregido
+                } else {
+                    document.getElementById("lexicalTable").style.display = "none";
+                }
+            });
+        }
+
+        function clearFields() {
+            document.getElementById("curpInput").value = "";
+            document.getElementById("validationMessage").innerText = "";
+            document.getElementById("lexicalTable").style.display = "none";
+            document.getElementById("total").innerText = ""; // Limpiar el total también
+        }
+
+        function calculateTotal(lexicalData) {
+            const total = Object.keys(lexicalData).length; // Total de elementos en lexicalData
+            return total;
+        }
+    </script>
+</body>
+</html>
